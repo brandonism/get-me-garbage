@@ -1,12 +1,16 @@
 import React from 'react';
 import './App.css';
 import Button from 'react-bootstrap/Button';
-import Map from './Map.js'
+import MapContainer from './map/MapContainer.js'
 
 class App extends React.Component {
     constructor(props) {
         super(props);
         this.state = {show:false,origin:null};
+        this.getLocation();
+    }
+
+    getLocation() {
         navigator.geolocation.getCurrentPosition(
             (position) => {
                 this.setState({origin:{name:'You',lat:position.coords.latitude,lng:position.coords.longitude}});
@@ -15,7 +19,7 @@ class App extends React.Component {
             },{timeout:3000});
     }
 
-    checkOrigin() {
+    checkLocation() {
         if (this.state.origin === null) {
             alert('Turn Location Services on');
         } else {
@@ -27,11 +31,11 @@ class App extends React.Component {
         return (
             <>
             {!this.state.show && 
-                <Button className='finder' variant='dark' onClick={() => this.checkOrigin()}>
+                <Button className='finder' variant='dark' onClick={() => this.checkLocation()}>
                     <h1>Find the Nearest Garbage Plate</h1>
                 </Button>}
-            {this.state.show && 
-                <Map origin={this.state.origin} />}
+            {this.state.show && // if this gets more complex maybe change to route
+                <MapContainer origin={this.state.origin} />}
             </>
         );
     }

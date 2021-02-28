@@ -1,14 +1,17 @@
 import React from 'react';
-import { MapStyles } from './Data.js'
-import { Hots } from './Data.js'
+import { MapStyles } from '../Data.js'
+import { Hots } from '../Data.js'
+import './Map.css';
+
 /* global google */
 
 const lineColor = '#409F9F';
-const labelColor = '#ffAA55';
+const labelColor = '#FFAA55';
 
 export class Map extends React.Component {
     constructor(props) {
         super(props);
+        this.state = {'markers':[]}
         this.mapref = React.createRef();
     }
 
@@ -74,18 +77,24 @@ export class Map extends React.Component {
             mapTypeId: 'terrain',
             styles: MapStyles.data
         });
+
         this.addMarker(this.props.origin,map);
         this.addMarker(destination,map);
+        Hots.data.forEach(hot => {
+            this.addMarker(hot,this.state.map);
+        });
+        this.setExtraMapMarkers(null);
         let directionsMap = new google.maps.DirectionsRenderer({
             suppressMarkers: true,
             polylineOptions: { strokeColor: lineColor } 
         });
         directionsMap.setMap(map);
         directionsMap.setDirections(directions);
+        this.setState({'map':map});
     }
 
     addMarker(location,map) {
-        new google.maps.Marker({
+        const marker = new google.maps.Marker({
             position: location,
             map,
             title: location.name,
@@ -101,6 +110,22 @@ export class Map extends React.Component {
                 fontWeight: 'bold'
             },
         });
+        marker.setMap(map);
+        this.state.markers.push(marker);
+    }
+
+    setExtraMapMarkers(map) {
+        for (let i = 2; i < this.state.markers.length; i++) {
+            this.state.markers[i].setMap(map);
+        }        
+    }
+
+    componentDidUpdate(prevProps) {
+        if (this.props.addAllMarkers) {
+            this.setExtraMapMarkers(this.state.map);
+        } else {
+            this.setExtraMapMarkers(null);
+        }
     }
 
     render() {
