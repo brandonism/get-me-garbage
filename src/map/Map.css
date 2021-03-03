@@ -17,3 +17,9 @@ div#header button {
     top: 12px;
     z-index: 99;
 }
+span.open {
+    color:green;
+}
+span.closed {
+    color:red;
+}

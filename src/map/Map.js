@@ -18,7 +18,7 @@ export class Map extends React.Component {
     componentDidMount() {
         let hots = this.striaghtDistances(this.props.origin,Hots.data)
                     .sort((a,b) => a.striaghtDistance - b.striaghtDistance)
-                    .slice(0,9);//distanceMatrix is limited to 25, slicing to 10 for speed
+                    .slice(0,24);//distanceMatrix is limited to 25, slicing to 10 for speed
 
         this.drivingDistances(this.props.origin,hots).then(results=>{
             results.forEach((distance,index) => hots[index].drivingDistance = distance);
@@ -69,6 +69,22 @@ export class Map extends React.Component {
         });
     }
 
+    placeDetails(map,placeId) {
+        const service = new google.maps.places.PlacesService(map);
+        return new Promise((resolve, reject) => {
+            service.getDetails({
+                placeId: placeId,
+                fields: ['name','formatted_address','business_status','opening_hours','utc_offset_minutes'],
+            },(response, status) => {
+                if (status === google.maps.places.PlacesServiceStatus.OK) {
+                    resolve(response);
+                } else {
+                    reject(new Error(status));
+                }
+            });
+        });
+    }
+
     createMap(destination,directions) {
         let map = new google.maps.Map(
             this.mapref.current, {
@@ -83,6 +99,7 @@ export class Map extends React.Component {
         Hots.data.forEach(hot => {
             this.addMarker(hot,this.state.map);
         });
+
         this.setExtraMapMarkers(null);
         let directionsMap = new google.maps.DirectionsRenderer({
             suppressMarkers: true,
@@ -90,6 +107,21 @@ export class Map extends React.Component {
         });
         directionsMap.setMap(map);
         directionsMap.setDirections(directions);
+
+        let infowindow = new google.maps.InfoWindow();
+        this.placeDetails(map,destination.id).then(results => {
+
+            const open = results.opening_hours.isOpen() ? '<span class="open">Open</span>':'<span class="closed">Closed</span>'
+            const content = results.name+'<br/>'+results.formatted_address+'<br/>'+ open || '';
+
+            infowindow.setContent(content);
+            infowindow.open(map,this.state.markers[1]);
+
+            this.state.markers[1].addListener('click', () => {
+                infowindow.open(map,this.state.markers[1]);
+            });
+        });
+
         this.setState({'map':map});
     }
 
